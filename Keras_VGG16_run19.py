@@ -18,11 +18,11 @@ import itertools
 import pickle
 
 # path to the model weights files.
-model_path = '/path/to/store/model' +str(seed)+'.h5'
-weights_path = '/path/to/store/weights' +str(seed)+'.h5'
-training_history_path = '/path/to/store/training_history' +str(seed)+'.pickle'
-checkpoint_path = "/patch/to/store/checkpoint_weights" +str(seed)+"_weights-improvement-{epoch:02d}-{val_acc:.2f}.h5"
-log_dir = "/patch/to/store/logs" +str(seed)+"_logs"
+model_path = '/path/to/store/model.h5'
+weights_path = '/path/to/store/weights.h5'
+training_history_path = '/path/to/store/training_history.pickle'
+checkpoint_path = "/patch/to/store/checkpoint_weights_weights-improvement-{epoch:02d}-{val_acc:.2f}.h5"
+log_dir = "/patch/to/store/logs"
 train_data_dir = 'path/to/training_ddataset'
 validation_data_dir = 'path/to/validation_dataset'
 nb_train_samples = 8000
@@ -30,7 +30,6 @@ nb_validation_samples = 2000
 epochs = 10
 batch_size = 2
 img_width, img_height = 224, 224
-title_cm = 'run19 seed' +str(seed)
 
 print "dataset: name"
 print "Number of training samples: " + str(nb_train_samples)
