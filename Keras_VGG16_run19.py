@@ -1,15 +1,12 @@
-# repeats run05 with different seeds from 1 to 10
 # random weights
 # VGG16 from applications adjusted to 5 classes, no top_model stacked on top
 # small batch size of 2
 # Shuffle false
 
 
-
 ###############################################
 # importing libraries and setting variables   #
 ###############################################
-# import rest of libraries
 from keras.applications.vgg16 import VGG16
 from keras.preprocessing import image
 from keras.preprocessing.image import ImageDataGenerator
