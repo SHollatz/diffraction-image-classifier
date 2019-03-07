@@ -1,16 +1,16 @@
 # diffraction-image-classifier
 
-# Used Technology:
+## Used Technology:
 Keras with TensorFlow backend
 
-# Model:
+## Model:
 VGG16 in Keras applications
 
-# Settings:
+## Settings:
 img-size: 224, 224, 3
 batch-size: 2,
 optimizer: Adam,
 learning-rate: 1e-4
 
-# Author:
+## Author:
 Sabine Hollatz
