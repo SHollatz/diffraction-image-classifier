@@ -1,8 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-import warnings
-warnings.filterwarnings("ignore")
-
 import logging
 import numpy as np
 import tensorflow as tf
@@ -11,8 +8,6 @@ import resource
 from datetime import datetime
 from sklearn.metrics import confusion_matrix
 import keras as k
-
-# tf.enable_eager_execution()
 
 
 class Train:
@@ -112,7 +107,6 @@ class Train:
         tf.logging.info("fc6 %s" % str(fc6.shape.as_list()))
         tf.logging.info("fc7 %s" % str(fc7.shape.as_list()))
         tf.logging.info("logits %s" % str(self.__logits.shape.as_list()))
-        # tf.logging.info("predictions %s\n\n" % str(predictions.shape.as_list()))
 
         # Compute loss
         with tf.name_scope("loss_func"):
@@ -145,7 +139,7 @@ class Train:
                 self.__val_accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
                 self.__test_accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-        # Add loss to tensorboard
+        # Visualize in tensorboard
         summaries_train = [tf.summary.scalar("learning_rate", learning_rate),
                            tf.summary.scalar("global_step", self.__step_variable),
                            tf.summary.scalar("loss_train", self.__loss),
@@ -155,12 +149,11 @@ class Train:
         summaries_test = [tf.summary.scalar('test_accuracy', self.__test_accuracy),
                           tf.summary.scalar("loss_test", self.__loss_test)]
 
-        # Merge op for tensorboard
         self.__merged_summary_train = tf.summary.merge(summaries_train)
         self.__merged_summary_val = tf.summary.merge(summaries_val)
         self.__merged_summary_test = tf.summary.merge(summaries_test)
 
-        # Build graph
+        # initializer for variables
         init = tf.global_variables_initializer()
 
         # Saver for checkpoints
@@ -168,7 +161,6 @@ class Train:
 
         # Avoid allocating the whole memory
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.6)
-        # self.__session = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, device_count={'GPU': 0}))
         self.__session = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
         k.backend.set_session(self.__session)
 
@@ -178,48 +170,35 @@ class Train:
         self.__writer_val = tf.summary.FileWriter("./logs/logs_" + logdir + "/debug_val", self.__session.graph)
         self.__writer_test = tf.summary.FileWriter("./logs/logs_" + logdir + "/debug_test", self.__session.graph)
 
+        # initialize variables
         self.__session.run(init)
-        # logging.info("NEW: Finalizing graph.")
-        # self.__session.graph.finalize()
 
     def preprocess_image(self, img):
-        # print("img type", type(img))
         img_arr = tf.image.decode_png(img, channels=1)
-        # print("img_arr.shape: ", img_arr.shape)
         image = img_arr / 255  # normalize to [0,1]
 
         return image
 
     def load_and_preprocess_image(self, filename):
         image = tf.read_file(tf.cast(filename, dtype=tf.string))
-        # tf.logging.info("file: {}".format(filename))
 
         return self.preprocess_image(image)
 
     def create_data_iterator(self, num_imgs, img_data_array, input_path, batch_size):
-        # print("inside create_data_iterator ", img_data_array)
         img_paths = []
         for i in range(num_imgs):
             img_paths.append(input_path + img_data_array[i][0])
-
-        print(img_paths)
+            
         path_ds = tf.data.Dataset.from_tensor_slices(img_paths)
         image_ds = path_ds.map(self.load_and_preprocess_image)
-
-        print("path_ds ", path_ds)
-        print("image_ds ", image_ds)
-
+        
         onehot_labels = []
         for i in range(num_imgs):
             onehot_labels.append(img_data_array[i][1])
 
         label_ds = tf.data.Dataset.from_tensor_slices(tf.cast(onehot_labels, tf.int64))
-        # for label in label_ds.take(10):
-        #     print("label: ", label)
-        print("label_ds ", label_ds)
         image_label_ds = tf.data.Dataset.zip((image_ds, label_ds))
 
-        print("image_label_ds ", image_label_ds)
         # Enable Logging
         tf.logging.set_verbosity(tf.logging.DEBUG)
 
@@ -227,7 +206,6 @@ class Train:
         final_ds = image_label_ds.shuffle(buffer_size=num_imgs)
         final_ds = final_ds.batch(batch_size)
         final_ds = final_ds.prefetch(buffer_size=num_imgs)
-        print("final_ds ", final_ds)
 
         # Create an iterator
         iterator = final_ds.make_initializable_iterator()
@@ -242,22 +220,12 @@ class Train:
         num_train_images = 8010
         num_val_images = 2000  # left 12 out to make divisible by batch_size_val
         num_test_images = 2380  # left one out to make divisible for batch_size
-        # batch_size_train = 26
-        # batch_size_val = 14
-        # num_images = 571968
-        # num_train_images = 457574
-        # num_val_images = 114394
         num_batches_train = int(num_train_images / batch_size_train)  # 90
-        # num_batches_val = int(num_val_images / batch_size_val) # 503
         num_batches_test = int(num_test_images / batch_size_test)  # 28
         path = "/data/holton/deep_learning/try1/resnet1/"
-        # path = "/mnt/scratch/datasets/try1_gray_pgm_307-315/"
-        # print(data.loc[1:10])
         data = pd.read_csv(path + "categories_multi.txt", delim_whitespace=True, header=None)
 
-        # data = pd.read_csv(path + "imgLabeledShuffeled.txt", delim_whitespace=True, header=None)
         all_img_data = []
-
         for i in range(num_images):
             single_image_data = []
             single_image_labels = [
@@ -274,7 +242,6 @@ class Train:
         train_img_data = []
         val_img_data = []
         test_img_data = []
-
         for img_data in all_img_data:
             if "training" in img_data[0]:
                 train_img_data.append(img_data)
@@ -328,7 +295,6 @@ class Train:
 
             # display images in tensorboard
             images = np.reshape(batch_x_train[:], (-1, 224, 224, 1))
-            # TODO: NEXT LINE CHANGES THE GRAPH
             image_summary_op = tf.summary.image("train_batch", images, max_outputs=89)
             image_summary = self.__session.run(image_summary_op, feed_dict={self.__x_: batch_x_train,
                                                                             self.__y_: batch_y_train,
@@ -350,13 +316,8 @@ class Train:
         test_predictions = []
 
         for j in range(num_batches_test):
-            # print("j: ", j)
             batch_test = self.__session.run([iter_test_op])
-            # print("test_batch[0]: ", batch_test[0])
-            # print("len(test_batch[0]): ", len(batch_test[0]))
             batch_x_test, batch_y_test = batch_test[0]
-            # print("batch_x_test.shape: ", batch_x_test.shape)
-            # print("batch_y_test.shape: ", batch_y_test.shape)
 
             loss_test, test_accuracy, summary_test, logits = self.__session.run(
                 [self.__loss_test, self.__test_accuracy, self.__merged_summary_test, self.__logits],
@@ -369,13 +330,12 @@ class Train:
                 test_predictions.append(np.argmax(pred))
                 self.__writer_test.add_summary(summary_test, step)
 
-            # print("Loop iteration: ", j)
             print("Loss Test: {0} Acc Test: {1}".format(loss_test, test_accuracy))
             print()
 
-        # print("test logits ", test_logits)
-        # print("Test predictions", test_predictions)
-
+        onehot_labels_test = []
+        for i in range(num_test_images):
+            onehot_labels_test.append(test_img_data[i][1])    
         class_labels = []
         for label in onehot_labels_test:
             class_labels.append(np.argmax(label))
@@ -387,14 +347,6 @@ class Train:
 
         cm = confusion_matrix(class_labels, test_predictions)
         print (cm)
-
-        # print(class_labels)
-
-        # Save model
-        # checkpoint_path = "/scratch/development/checkpoints/VGG16_try1_classifier"
-        # self.__saver = tf.train.Saver()
-        # filename = self.__saver.save(self.__session, checkpoint_path)
-        # print("Model saved in file: %s" % filename)
 
 
 if __name__ == '__main__':
