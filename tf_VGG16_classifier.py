@@ -282,7 +282,7 @@ class Train:
                                                                self.__is_training: True})
 
                 except tf.errors.OutOfRangeError:
-                    print("inside exception")
+                    logging.info("The iterator is out of range.")
                     break
 
             batch_val = self.__session.run([iter_val_op])
@@ -330,8 +330,8 @@ class Train:
                 test_predictions.append(np.argmax(pred))
                 self.__writer_test.add_summary(summary_test, step)
 
-            print("Loss Test: {0} Acc Test: {1}".format(loss_test, test_accuracy))
-            print()
+            logging.info("Loss Test: {0} Acc Test: {1}".format(loss_test, test_accuracy))
+            logging.info("")
 
         onehot_labels_test = []
         for i in range(num_test_images):
@@ -346,7 +346,7 @@ class Train:
         tick_marks = np.arange(5)
 
         cm = confusion_matrix(class_labels, test_predictions)
-        print (cm)
+        logging.info(cm)
 
 
 if __name__ == '__main__':
